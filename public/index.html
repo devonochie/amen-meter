@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amen Meter</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:transparent;}
+  body{font-family:'Rajdhani',Arial,sans-serif;color:#fff;padding:16px;width:420px;max-width:calc(100vw - 32px);box-sizing:border-box;}
+  body.green{background:#00ff00;}
+  .panel{position:relative;padding:10px 6px;}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;margin:0 6px 8px;}
+  .title{font-family:'Cinzel',serif;font-weight:900;font-size:20px;letter-spacing:2px;
+    background:linear-gradient(90deg,#ff5fd2,#ff9a3c,#ffe066);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));}
+  .sub{font-size:13px;letter-spacing:1px;color:#ffd9a8;text-shadow:0 1px 3px #000;opacity:.9}
+  .count{font-size:22px;font-weight:700;text-shadow:0 0 8px rgba(255,140,40,.8),0 2px 3px #000;}
+  .count small{font-size:14px;opacity:.7}
+  .track{position:relative;height:26px;border-radius:20px;padding:5px;
+    background:rgba(10,10,14,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 0 0 2px rgba(0,0,0,.6),0 4px 14px rgba(0,0,0,.5);}
+  .inner{position:relative;height:100%;border-radius:14px;background:rgba(40,40,48,.6);overflow:visible;}
+  .fill{position:relative;height:100%;width:0%;border-radius:14px;transition:width .6s cubic-bezier(.2,.8,.2,1);
+    background:linear-gradient(90deg,#b21fc9,#e8389a 35%,#ff6a2b 70%,#ffb13b);
+    background-size:200% 100%;animation:flow 3s linear infinite;
+    box-shadow:0 0 12px rgba(255,90,40,.7),inset 0 2px 3px rgba(255,255,255,.35),inset 0 -3px 4px rgba(0,0,0,.35);}
+  .fill::before{content:"";position:absolute;inset:0;border-radius:14px;opacity:.35;
+    background:repeating-radial-gradient(circle at 20% 50%,rgba(255,255,255,.5) 0 2px,transparent 3px 9px);animation:bub 2s linear infinite;}
+  .flame{position:absolute;right:-16px;top:50%;width:36px;height:36px;transform:translateY(-50%);pointer-events:none;}
+  .flame span{position:absolute;inset:0;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+    background:radial-gradient(circle at 50% 60%,#fff 0 12%,#ffe36b 25%,#ff8a1c 50%,rgba(255,40,0,.6) 70%,transparent 75%);
+    filter:blur(.5px);animation:flick .25s ease-in-out infinite alternate;}
+  .flame span:nth-child(2){transform:scale(1.5);opacity:.45;filter:blur(4px);animation-duration:.4s}
+  .flame span:nth-child(3){transform:scale(.7) translate(-30%,-20%);animation-duration:.18s}
+  .fill[data-empty="1"] .flame{display:none}
+  @keyframes flow{to{background-position:-200% 0}}
+  @keyframes bub{to{background-position:-40px 0}}
+  @keyframes flick{from{transform:scale(1) rotate(-6deg)}to{transform:scale(1.15) rotate(6deg)}}
+  .panel.burst .fill{width:100%!important;animation:flow 1s linear infinite,glow .5s ease-in-out infinite alternate}
+  .panel.burst .fill .flame{display:block;transform:translateY(-50%) scale(1.6)}
+  .panel.burst .count{color:#ffe066}
+  @keyframes glow{to{box-shadow:0 0 28px rgba(255,170,40,1),inset 0 2px 3px rgba(255,255,255,.4)}}
+</style>
+</head>
+<body>
+<div class="panel" id="panel">
+  <div class="head">
+    <div><div class="title">AMEN METER</div><div class="sub">Type AMEN </div></div>
+    <div class="count"><span id="amenCount">0</span><small> / <span id="amenGoal">100</span></small></div>
+  </div>
+  <div class="track"><div class="inner"><div class="fill" id="amenFill" data-empty="1"><div class="flame"><span></span><span></span><span></span></div></div></div></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const q=new URLSearchParams(location.search);
+  if(q.get('bg')==='green')document.body.classList.add('green');
+  function update(d){const p=Math.min(100,d.amen/d.goal*100);const f=document.getElementById('amenFill');
+    f.style.width=p+'%';f.dataset.empty=p<=0?'1':'0';
+    document.getElementById('amenCount').textContent=d.amen;document.getElementById('amenGoal').textContent=d.goal;}
+  function celebrate(){const p=document.getElementById('panel');p.classList.add('burst');setTimeout(()=>p.classList.remove('burst'),2500);}
+  if(typeof io!=='undefined'){const s=io();s.on('amen',update);s.on('celebrate',celebrate);}
+  if(q.get('preview'))update({amen:+q.get('preview'),goal:100});
+</script>
+</body>
+</html>
